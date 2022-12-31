@@ -1,21 +1,27 @@
 use std::fs;
 
 #[derive(Debug)]
-struct Dir<'a> {
-    name: String,
-    entries: &'a mut Vec<DirOrFile<'a>>,
+struct Session {
+    root_dir: Dir,
+    current_path: Vec<String>,
 }
 
 #[derive(Debug)]
-struct File<'a> {
+struct Dir {
     name: String,
-    size: &'a usize,
+    entries: Vec<DirOrFile>,
 }
 
 #[derive(Debug)]
-enum DirOrFile<'a> {
-    Dir(Dir<'a>),
-    File(File<'a>),
+struct File {
+    name: String,
+    size: usize,
+}
+
+#[derive(Debug)]
+enum DirOrFile {
+    Dir(Dir),
+    File(File),
 }
 
 fn main() {
@@ -34,33 +40,36 @@ fn main() {
 
     println!("input lines {:?}", lines);
 
-    let mut root_dir = Dir { name: "/".to_string(), entries: &mut Vec::new() };
+    let root_dir = Dir { name: "/".to_string(), entries: Vec::new() };
     // let dir_entry = Dir { name: "a_file".to_string(), entries: &mut Vec::new() };
     // let file_entry = File { name: "a_dir".to_string(), size: &12345 };
     // root_dir.entries.push(DirOrFile::Dir(dir_entry));
     // root_dir.entries.push(DirOrFile::File(file_entry));
 
-    parse_terminal_lines(lines, &mut root_dir);
+    let mut session = Session { root_dir: root_dir, current_path: Vec::new() };
+
+    session.parse_terminal_lines(lines);
     // println!("filesystem {:?}", root_dir);
 }
 
-fn parse_terminal_lines<'a>(lines: Vec<Vec<&str>>, root_dir: &'a mut Dir<'a>) {
-    let mut cur_path: Vec<&'a Dir> = Vec::new();
-    cur_path.push(root_dir);
+impl Session {
+    fn parse_terminal_lines(&mut self, lines: Vec<Vec<&str>>) {
+        for words in lines.iter() {
+            self.run_terminal_line(words);
+        }
+    }
 
-    lines.iter().for_each(|words| {
+    fn run_terminal_line(&mut self, words: &Vec<&str>) -> Option<String> {
+        // get &mut Dir for self.cur_dir
+        let mut curdir: &mut Dir = &mut self.root_dir;
+
         match words.iter().next() {
             Some(&"$") => {
                 match words.get(1) {
                     Some(&"cd") => {
                         match words.get(1) {
-                            Some(&"..") => {
-                                cur_path.pop();
-                            }
-                            Some(name) => {
-                                cur_path.push(cur_path.last().unwrap().subdir(name))
-                            }
-                            _ => ()
+                            Some(s) => return Some(s.to_string()),
+                            _ => (),
                         }
                     },
                     Some(&"ls") => {},
@@ -70,25 +79,26 @@ fn parse_terminal_lines<'a>(lines: Vec<Vec<&str>>, root_dir: &'a mut Dir<'a>) {
             Some(&"dir") => {
                 let d = Dir {
                     name: words.get(1).unwrap().to_string(),
-                    entries: &mut Vec::new(),
+                    entries: Vec::new(),
                 };
-                cur_path.last().unwrap().entries.push(DirOrFile::Dir(d));
+                curdir.entries.push(DirOrFile::Dir(d));
             },
             Some(size) => {
                 let f = File {
                     name: words.get(1).unwrap().to_string(),
-                    size: &size.parse::<usize>().unwrap(),
+                    size: size.parse::<usize>().unwrap(),
                 };
-                cur_path.last().unwrap().entries.push(DirOrFile::File(f));
+                curdir.entries.push(DirOrFile::File(f));
             },
             _ => {},
         }
         println!("{:?}", words);
-    });
+        None
+    }
 }
 
-impl<'a> Dir<'a> {
-    fn subdir(&'a self, name: &str) -> &'a Dir<'a> {
+impl Dir {
+    fn subdir(&self, name: &str) -> &Dir {
         for entry in self.entries.iter() {
             match entry {
                 DirOrFile::Dir(d) => {
