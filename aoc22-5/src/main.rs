@@ -3,7 +3,6 @@ use std::str::FromStr;
 use std::string::ParseError;
 use regex::Regex;
 use lazy_static::lazy_static;
-// use std::io::{self, Write};
 
 #[derive(Debug)]
 struct Move {
@@ -149,7 +148,7 @@ fn print_stack(heading: &str, stack: &Vec<Vec<String>>) {
 impl FromStr for Move {
     type Err = ParseError;
 
-    fn from_str(line: &str) -> Result<Self, Self::Err> {        
+    fn from_str(line: &str) -> Result<Self, Self::Err> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"^move (\d+) from (\d+) to (\d+)$").unwrap();
         }
