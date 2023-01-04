@@ -7,7 +7,7 @@ struct Crypt {
 }
 
 fn main() {
-    let input_filename = "input20.txt";
+    let input_filename = "input20-test.txt";
 
     let content = fs::read_to_string(input_filename)
         .expect(format!("Unable to read the file \"{input_filename}\"").as_str());
@@ -49,7 +49,7 @@ impl Crypt {
 
         while !self.indices.is_empty() {
             self.apply();
-            // println!("after: {:?}", self);
+            println!("after: {:?}", self);
         };
     }
 
@@ -57,7 +57,7 @@ impl Crypt {
         let from_index = self.indices.pop().unwrap();
         let digit = self.digits[from_index];
         let digits_len = self.digits.len() as i64;
-        println!("DBG: moving {} at {}", digit, from_index);
+        // println!("DBG: moving {} at {}", digit, from_index);
         if digit == 0 || digit.abs() % (digits_len - 1) == 0 {
             println!("no-op");
             return;
@@ -71,16 +71,17 @@ impl Crypt {
         if to_i == 0 && from_index > 0 {
             to_i = digits_len - 1;
         }
-        println!("shuffle {digit} from {from_index} dest {to_i}");
+        // println!("shuffle {digit} from {from_index} dest {to_i}");
         self.shuffle(digit, from_index, to_i as usize);    
 }
 
     fn shuffle(&mut self, digit: i64, from: usize, dest: usize) {
         match cmp(dest, from) {
             1 => {
-                println!("a) Removing {} from position {}", self.digits.remove(from), from);
+                // println!("a) Removing {} from position {}", self.digits.remove(from), from);
+                self.digits.remove(from);
 
-                println!("Inserting {} at position {}", digit, dest);
+                // println!("Inserting {} at position {}", digit, dest);
                 self.digits.insert(dest, digit);
     
                 let mut slice: &mut [usize] = self.indices.as_mut_slice();
@@ -93,13 +94,14 @@ impl Crypt {
                 };
             },
             -1 => {
-                println!("b) Removing {} from position {}", self.digits.remove(from), from);
+                // println!("b) Removing {} from position {}", self.digits.remove(from), from);
+                self.digits.remove(from);
 
-                println!("Inserting {} at position {}", digit, dest);
+                // println!("Inserting {} at position {}", digit, dest);
                 self.digits.insert(dest, digit);
     
                 let mut slice: &mut [usize] = self.indices.as_mut_slice();
-                println!("Decrementing indices {}..={}", from + 1, dest);
+                // println!("Decrementing indices {}..={}", from + 1, dest);
                 for i in 0..slice.len() {
                     let index: usize = slice[i as usize];
                     if from < index && index <= dest {
